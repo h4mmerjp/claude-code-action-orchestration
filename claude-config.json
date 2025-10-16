@@ -1,0 +1,111 @@
+{
+  "version": "1.0.0",
+  "description": "Claude CLI Configuration for Development Orchestration",
+  "authentication": {
+    "type": "session",
+    "sessionTokenPath": "~/.config/claude/session_token",
+    "autoRefresh": false,
+    "expiryWarningDays": 7
+  },
+  "models": {
+    "default": "claude-haiku-4-5",
+    "strategic": "claude-sonnet-4-5",
+    "implementation": "claude-haiku-4-5",
+    "preferences": {
+      "architecture": "claude-sonnet-4-5",
+      "design": "claude-sonnet-4-5",
+      "review": "claude-sonnet-4-5",
+      "integration": "claude-sonnet-4-5",
+      "optimization": "claude-sonnet-4-5",
+      "implementation": "claude-haiku-4-5",
+      "documentation": "claude-haiku-4-5",
+      "testing": "claude-haiku-4-5",
+      "refactoring": "claude-haiku-4-5",
+      "bugfix": "claude-haiku-4-5"
+    }
+  },
+  "costOptimization": {
+    "enabled": true,
+    "strategy": "task-based",
+    "rules": [
+      {
+        "taskType": [
+          "architecture",
+          "design",
+          "review",
+          "integration",
+          "critical"
+        ],
+        "model": "claude-sonnet-4-5",
+        "reason": "Strategic decisions require highest quality"
+      },
+      {
+        "taskType": [
+          "implement",
+          "document",
+          "test",
+          "refactor",
+          "routine"
+        ],
+        "model": "claude-haiku-4-5",
+        "reason": "Fast execution with excellent quality"
+      }
+    ],
+    "targetRatio": {
+      "sonnet": 0.3,
+      "haiku": 0.7
+    },
+    "expectedSavings": "50-60%"
+  },
+  "usage": {
+    "trackUsage": true,
+    "monthlyLimits": {
+      "sonnet": 100,
+      "haiku": 1000
+    },
+    "alertThreshold": 0.8,
+    "reportFrequency": "weekly"
+  },
+  "workflow": {
+    "parallelization": {
+      "enabled": true,
+      "maxConcurrent": 5,
+      "model": "claude-haiku-4-5"
+    },
+    "retryPolicy": {
+      "maxRetries": 3,
+      "backoffMultiplier": 2,
+      "initialDelayMs": 1000
+    },
+    "timeout": {
+      "strategic": 300000,
+      "implementation": 180000,
+      "documentation": 120000
+    }
+  },
+  "output": {
+    "format": "markdown",
+    "verbosity": "normal",
+    "includeMetadata": true,
+    "logFile": ".claude/logs/claude-dev.log"
+  },
+  "safety": {
+    "loopPrevention": {
+      "enabled": true,
+      "markers": [
+        "<!-- CLAUDE-BOT-COMMENT -->",
+        "<!-- CLAUDE-BOT-PR -->"
+      ],
+      "botUsernames": [
+        "github-actions[bot]",
+        "Claude Bot",
+        "claude-bot"
+      ]
+    },
+    "validation": {
+      "typescriptStrict": true,
+      "lintBeforeCommit": true,
+      "securityScan": true
+    }
+  }
+}

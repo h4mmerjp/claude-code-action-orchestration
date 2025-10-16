@@ -1,0 +1,91 @@
+{
+  "version": "1.0.0",
+  "description": "MCP Server Configuration for Claude Development Orchestration",
+  "servers": {
+    "filesystem": {
+      "enabled": true,
+      "package": "@modelcontextprotocol/server-filesystem",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem"],
+      "workingDirectory": "${GITHUB_WORKSPACE}",
+      "description": "File system operations for code generation",
+      "priority": "high"
+    },
+    "brave-search": {
+      "enabled": true,
+      "package": "@modelcontextprotocol/server-brave-search",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-brave-search"],
+      "env": {
+        "BRAVE_API_KEY": "${BRAVE_API_KEY}"
+      },
+      "description": "Web search for best practices and documentation",
+      "priority": "medium",
+      "optional": true
+    },
+    "sqlite": {
+      "enabled": true,
+      "package": "@modelcontextprotocol/server-sqlite",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sqlite",
+        "--db-path",
+        "${GITHUB_WORKSPACE}/dev.db"
+      ],
+      "description": "Database operations and schema management",
+      "priority": "high"
+    },
+    "notion": {
+      "enabled": false,
+      "package": "@notionhq/mcp-server-notion",
+      "command": "npx",
+      "args": ["@notionhq/mcp-server-notion"],
+      "env": {
+        "NOTION_API_KEY": "${NOTION_API_KEY}"
+      },
+      "description": "Documentation generation in Notion",
+      "priority": "low",
+      "optional": true
+    },
+    "stripe": {
+      "enabled": false,
+      "package": "mcp-server-stripe",
+      "command": "npx",
+      "args": ["mcp-server-stripe"],
+      "env": {
+        "STRIPE_API_KEY": "${STRIPE_API_KEY}"
+      },
+      "description": "Stripe payment integration",
+      "priority": "medium",
+      "optional": true
+    }
+  },
+  "settings": {
+    "autoInstall": true,
+    "retryOnFailure": true,
+    "maxRetries": 3,
+    "timeout": 30000,
+    "logLevel": "info"
+  },
+  "usage": {
+    "filesystem": {
+      "allowedPaths": ["${GITHUB_WORKSPACE}"],
+      "maxFileSize": "10MB",
+      "allowedExtensions": [
+        ".js",
+        ".ts",
+        ".jsx",
+        ".tsx",
+        ".json",
+        ".md",
+        ".css",
+        ".html"
+      ]
+    },
+    "sqlite": {
+      "maxConnections": 5,
+      "timeout": 5000
+    }
+  }
+}

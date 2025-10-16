@@ -1,0 +1,259 @@
+# .github/workflows/claude-dev-orchestration.yml
+name: 🤖 Claude Full-Stack Development Orchestration
+
+on:
+  issues:
+    types: [opened, labeled]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+env:
+  NODE_VERSION: '20'
+  PYTHON_VERSION: '3.11'
+  MODEL_STRATEGIC: 'claude-sonnet-4-5'
+  MODEL_IMPLEMENTATION: 'claude-haiku-4-5'
+  BOT_USERNAME: 'github-actions[bot]'
+
+jobs:
+  # ===== Job 0: ループ防止チェック =====
+  validate-trigger:
+    name: 🛡️ Validate Trigger Source
+    runs-on: ubuntu-latest
+    outputs:
+      should-run: ${{ steps.check.outputs.should_run }}
+      trigger-type: ${{ steps.check.outputs.trigger_type }}
+      issue-number: ${{ steps.check.outputs.issue_number }}
+    
+    steps:
+      - name: 🔍 Check Trigger Source
+        id: check
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const comment = context.payload.comment;
+            
+            // Issue作成の場合
+            if (context.eventName === 'issues' && issue) {
+              const hasLabel = issue.labels.some(
+                label => label.name === 'claude-dev' || label.name === 'fullstack'
+              );
+              
+              if (hasLabel) {
+                core.setOutput('should_run', 'true');
+                core.setOutput('trigger_type', 'issue_created');
+                core.setOutput('issue_number', issue.number);
+                console.log('✅ Triggered by issue creation');
+                return;
+              }
+            }
+            
+            // コメントの場合
+            if (context.eventName === 'issue_comment' && comment) {
+              const commentBody = comment.body || '';
+              const commentUser = comment.user.login;
+              
+              // ❌ ボットのコメントは無視
+              const botPatterns = ['[bot]', 'github-actions', 'Claude Bot'];
+              if (botPatterns.some(pattern => commentUser.includes(pattern))) {
+                core.setOutput('should_run', 'false');
+                core.setOutput('trigger_type', 'bot_comment');
+                console.log('❌ Ignoring bot comment');
+                return;
+              }
+              
+              // ❌ ボット識別子付きコメントは無視
+              if (commentBody.includes('<!-- CLAUDE-BOT-COMMENT -->')) {
+                core.setOutput('should_run', 'false');
+                core.setOutput('trigger_type', 'bot_generated');
+                console.log('❌ Ignoring bot-generated comment');
+                return;
+              }
+              
+              // ✅ /claude-build コマンド
+              if (commentBody.includes('/claude-build')) {
+                core.setOutput('should_run', 'true');
+                core.setOutput('trigger_type', 'user_command');
+                core.setOutput('issue_number', issue.number);
+                console.log('✅ Triggered by /claude-build');
+                return;
+              }
+            }
+            
+            core.setOutput('should_run', 'false');
+            core.setOutput('trigger_type', 'ignored');
+
+  # ===== Job 1: 戦略立案（Sonnet 4.5） =====
+  strategic-planning:
+    name: 🎯 Strategic Planning (Sonnet 4.5)
+    runs-on: ubuntu-latest
+    needs: validate-trigger
+    if: needs.validate-trigger.outputs.should-run == 'true'
+    
+    outputs:
+      project-name: ${{ steps.plan.outputs.project_name }}
+      branch-name: ${{ steps.plan.outputs.branch_name }}
+      architecture: ${{ steps.plan.outputs.architecture }}
+      tasks: ${{ steps.plan.outputs.tasks }}
+      issue-number: ${{ needs.validate-trigger.outputs.issue-number }}
+    
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 🔐 Setup Claude Auth
+        run: |
+          mkdir -p ~/.config/claude
+          echo "${{ secrets.CLAUDE_SESSION_TOKEN }}" > ~/.config/claude/session_token
+
+      - name: 🎯 Create Strategic Plan
+        id: plan
+        run: |
+          # プロンプト作成とClaude Code実行
+          # （詳細は前回の回答を参照）
+          
+          PROJECT_NAME="example-project"
+          BRANCH_NAME="claude-dev/${PROJECT_NAME}-$(date +%s)"
+          
+          echo "project_name=${PROJECT_NAME}" >> $GITHUB_OUTPUT
+          echo "branch_name=${BRANCH_NAME}" >> $GITHUB_OUTPUT
+
+      - name: 📤 Upload Plan
+        uses: actions/upload-artifact@v4
+        with:
+          name: strategic-plan
+          path: strategic-plan.json
+
+      - name: 💬 Update Issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const botComment = `<!-- CLAUDE-BOT-COMMENT -->
+            🎯 **Strategic Planning Complete** (Sonnet 4.5)
+            
+            **Project:** ${{ steps.plan.outputs.project_name }}
+            **Branch:** \`${{ steps.plan.outputs.branch_name }}\`
+            
+            📊 Starting parallel implementation...
+            
+            ---
+            🤖 *Automated by Claude Dev Orchestration*`;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: ${{ needs.validate-trigger.outputs.issue-number }},
+              body: botComment
+            });
+
+  # ===== Job 2: 並列実装（Haiku 4.5） =====
+  parallel-implementation:
+    name: ⚡ ${{ matrix.task.name }} (Haiku 4.5)
+    runs-on: ubuntu-latest
+    needs: [validate-trigger, strategic-planning]
+    if: needs.validate-trigger.outputs.should-run == 'true'
+    strategy:
+      max-parallel: 5
+      matrix:
+        task: ${{ fromJson(needs.strategic-planning.outputs.tasks) }}
+    
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🌿 Setup Branch
+        run: |
+          git config --global user.name "Claude Bot"
+          git config --global user.email "claude-bot@anthropic.com"
+          git checkout -B ${{ needs.strategic-planning.outputs.branch-name }}
+
+      - name: ⚡ Implement Task
+        run: |
+          # Haiku 4.5で実装
+          echo "Implementing ${{ matrix.task.name }}"
+
+      - name: 💾 Save Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: implementation-${{ matrix.task.id }}
+          path: ./**
+
+  # ===== Job 3: 統合（Sonnet 4.5） =====
+  integration:
+    name: 🔄 Integration (Sonnet 4.5)
+    runs-on: ubuntu-latest
+    needs: [validate-trigger, strategic-planning, parallel-implementation]
+    if: needs.validate-trigger.outputs.should-run == 'true'
+    
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.strategic-planning.outputs.branch-name }}
+
+      - name: 📥 Download Implementations
+        uses: actions/download-artifact@v4
+        with:
+          path: implementations
+
+      - name: 🔄 Integrate
+        run: |
+          # Sonnet 4.5で統合
+          echo "Integrating components"
+
+      - name: 📤 Push Changes
+        run: |
+          git add .
+          git commit -m "🔄 Integration complete" || echo "No changes"
+          git push origin ${{ needs.strategic-planning.outputs.branch-name }}
+
+  # ===== Job 4: PR作成 =====
+  create-pull-request:
+    name: 📬 Create PR
+    runs-on: ubuntu-latest
+    needs: [validate-trigger, strategic-planning, integration]
+    if: needs.validate-trigger.outputs.should-run == 'true'
+    
+    steps:
+      - name: 🔀 Create PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: pr } = await github.rest.pulls.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `🤖 [Claude Dev] ${{ needs.strategic-planning.outputs.project-name }}`,
+              head: '${{ needs.strategic-planning.outputs.branch-name }}',
+              base: 'main',
+              body: `<!-- CLAUDE-BOT-PR -->
+              ## 🤖 Automated Development
+              
+              **Project:** ${{ needs.strategic-planning.outputs.project-name }}
+              **Issue:** #${{ needs.strategic-planning.outputs.issue-number }}
+              
+              Generated by Claude Haiku 4.5 + Sonnet 4.5`
+            });
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: ${{ needs.strategic-planning.outputs.issue-number }},
+              body: `<!-- CLAUDE-BOT-COMMENT -->
+              🎉 **Development Complete!**
+              
+              Pull Request: #${pr.number}
+              [Review PR](${pr.html_url})
+              
+              ---
+              🤖 *Automated by Claude Dev Orchestration*`
+            });

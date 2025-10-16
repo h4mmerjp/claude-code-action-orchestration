@@ -1,0 +1,141 @@
+# .github/workflows/setup-claude-auth.yml
+name: 🔐 Claude Authentication Setup Guide
+
+on:
+  workflow_dispatch:
+  
+jobs:
+  show-setup-instructions:
+    name: 📖 Display Setup Instructions
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📋 Authentication Setup Guide
+        run: |
+          cat << 'EOF'
+          
+          ╔════════════════════════════════════════════════════════════╗
+          ║     🔐 Claude Pro Authentication Setup Guide              ║
+          ╚════════════════════════════════════════════════════════════╝
+          
+          📝 Step 1: Get Your Claude Session Token
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          
+          Method A: Browser DevTools (Recommended)
+          1. Go to https://claude.ai and log in
+          2. Press F12 to open DevTools
+          3. Go to "Application" tab
+          4. In the left sidebar, expand "Cookies"
+          5. Click on "https://claude.ai"
+          6. Find the cookie named "sessionKey"
+          7. Copy the Value (it starts with "sk-ant-")
+          
+          Method B: Manual Inspection
+          1. Log in to claude.ai
+          2. Right-click → Inspect
+          3. Go to Storage/Application
+          4. Look for sessionKey cookie
+          
+          ⚠️  IMPORTANT:
+          - Token expires after ~30 days
+          - Keep it secret, never commit to repository
+          - Regenerate if compromised
+          
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          
+          📝 Step 2: Add to GitHub Secrets
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          
+          1. Go to your repository on GitHub
+          2. Click "Settings" tab
+          3. In left sidebar, click "Secrets and variables" → "Actions"
+          4. Click "New repository secret"
+          5. Name: CLAUDE_SESSION_TOKEN
+          6. Value: [paste your session token]
+          7. Click "Add secret"
+          
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          
+          📝 Step 3: Optional Secrets for MCP Servers
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          
+          Add these if you want to use specific integrations:
+          
+          BRAVE_API_KEY
+            - For web search capabilities
+            - Get it from: https://brave.com/search/api/
+          
+          NOTION_API_KEY
+            - For documentation generation in Notion
+            - Get it from: https://www.notion.so/my-integrations
+          
+          STRIPE_API_KEY
+            - For payment integration features
+            - Get it from: https://dashboard.stripe.com/apikeys
+          
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          
+          📝 Step 4: Verify Claude Pro Subscription
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          
+          ✅ Required Plan: Claude Pro ($20/month) or Team ($30/user)
+          
+          Check your subscription:
+          1. Go to https://claude.ai
+          2. Click your profile icon
+          3. Go to "Settings"
+          4. Check "Plan & Billing"
+          
+          Benefits of Pro/Team:
+          - Unlimited usage within fair use limits
+          - Access to Sonnet 4.5 and Haiku 4.5
+          - No per-token charges
+          - Priority access during peak times
+          
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          
+          📝 Step 5: Test the Setup
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          
+          1. Create a test issue with label "claude-dev"
+          2. Go to Actions tab
+          3. Watch the workflow run
+          4. Check for authentication errors in logs
+          
+          If you see errors:
+          - "Authentication failed" → Check token is correct
+          - "Token expired" → Get a new session token
+          - "Rate limited" → Wait a few minutes
+          
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          
+          📝 Step 6: Token Rotation Schedule
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          
+          Session tokens expire periodically. Set a reminder:
+          
+          📅 Every 30 days:
+          1. Generate new session token
+          2. Update GitHub Secret
+          3. Test with a sample issue
+          
+          💡 Pro Tip: Set a calendar reminder for token rotation!
+          
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          
+          ✅ Setup Complete Checklist
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          
+          □ Claude Pro/Team subscription active
+          □ Session token copied from browser
+          □ CLAUDE_SESSION_TOKEN added to GitHub Secrets
+          □ Optional MCP secrets added (if needed)
+          □ Test issue created and workflow passed
+          □ Calendar reminder set for token rotation
+          
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          
+          🆘 Troubleshooting
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          
+          Probl

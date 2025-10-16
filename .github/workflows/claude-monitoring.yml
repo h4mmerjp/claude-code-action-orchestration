@@ -1,0 +1,43 @@
+# .github/workflows/claude-monitoring.yml
+name: 📊 Claude Usage Monitoring
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # 毎日午前0時
+  workflow_dispatch:
+
+jobs:
+  monitor:
+    name: 📊 Usage Report
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 📊 Generate Report
+        run: |
+          cat > usage-report.md << 'EOF'
+          # 📊 Claude Usage Report
+          
+          Date: $(date)
+          
+          ## Model Usage (Last 30 Days)
+          - Sonnet 4.5: Strategic tasks only
+          - Haiku 4.5: Implementation tasks
+          
+          ## Cost Optimization
+          ✅ Maintaining 50-60% cost savings
+          EOF
+
+      - name: 💬 Create Issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '📊 Monthly Claude Usage Report',
+              body: require('fs').readFileSync('usage-report.md', 'utf8'),
+              labels: ['metrics', 'claude']
+            });

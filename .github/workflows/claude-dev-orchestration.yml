@@ -118,15 +118,36 @@ jobs:
 
       - name: 🎯 Create Strategic Plan
         id: plan
+        env:
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
         run: |
-          # プロンプト作成とClaude Code実行
-          # （詳細は前回の回答を参照）
-          
-          PROJECT_NAME="example-project"
+          # Extract project name from issue
+          PROJECT_NAME=$(echo "$ISSUE_TITLE" | sed 's/[^a-zA-Z0-9-]/-/g' | tr '[:upper:]' '[:lower:]' | cut -c1-30)
           BRANCH_NAME="claude-dev/${PROJECT_NAME}-$(date +%s)"
-          
+
+          # Create strategic plan with task breakdown
+          cat > strategic-plan.json << 'EOF'
+          {
+            "project": "'${PROJECT_NAME}'",
+            "architecture": "fullstack",
+            "tasks": [
+              {"id": "1", "name": "Backend API", "type": "backend", "priority": 1},
+              {"id": "2", "name": "Frontend UI", "type": "frontend", "priority": 2},
+              {"id": "3", "name": "Database Schema", "type": "database", "priority": 1},
+              {"id": "4", "name": "Tests", "type": "testing", "priority": 3},
+              {"id": "5", "name": "Documentation", "type": "docs", "priority": 4}
+            ]
+          }
+          EOF
+
+          # Extract tasks array for matrix
+          TASKS=$(cat strategic-plan.json | jq -c '.tasks')
+
           echo "project_name=${PROJECT_NAME}" >> $GITHUB_OUTPUT
           echo "branch_name=${BRANCH_NAME}" >> $GITHUB_OUTPUT
+          echo "architecture=fullstack" >> $GITHUB_OUTPUT
+          echo "tasks=${TASKS}" >> $GITHUB_OUTPUT
 
       - name: 📤 Upload Plan
         uses: actions/upload-artifact@v4
@@ -152,7 +173,7 @@ jobs:
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: ${{ needs.validate-trigger.outputs.issue-number }},
+              issue_number: parseInt('${{ needs.validate-trigger.outputs.issue-number }}'),
               body: botComment
             });
 
@@ -212,10 +233,14 @@ jobs:
           echo "Integrating components"
 
       - name: 📤 Push Changes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          git config --global user.name "Claude Bot"
+          git config --global user.email "claude-bot@anthropic.com"
           git add .
           git commit -m "🔄 Integration complete" || echo "No changes"
-          git push origin ${{ needs.strategic-planning.outputs.branch-name }}
+          git push -u origin ${{ needs.strategic-planning.outputs.branch-name }}
 
   # ===== Job 4: PR作成 =====
   create-pull-request:
@@ -247,13 +272,13 @@ jobs:
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: ${{ needs.strategic-planning.outputs.issue-number }},
+              issue_number: parseInt('${{ needs.strategic-planning.outputs.issue-number }}'),
               body: `<!-- CLAUDE-BOT-COMMENT -->
               🎉 **Development Complete!**
-              
+
               Pull Request: #${pr.number}
               [Review PR](${pr.html_url})
-              
+
               ---
               🤖 *Automated by Claude Dev Orchestration*`
             });

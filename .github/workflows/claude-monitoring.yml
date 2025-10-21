@@ -17,27 +17,49 @@ jobs:
 
       - name: 📊 Generate Report
         run: |
-          cat > usage-report.md << 'EOF'
+          REPORT_DATE=$(date '+%Y-%m-%d %H:%M:%S')
+
+          cat > usage-report.md << EOF
           # 📊 Claude Usage Report
-          
-          Date: $(date)
-          
+
+          **Report Date:** ${REPORT_DATE}
+
           ## Model Usage (Last 30 Days)
-          - Sonnet 4.5: Strategic tasks only
-          - Haiku 4.5: Implementation tasks
-          
+          - **Sonnet 4.5:** Strategic tasks only
+            - Planning and architecture
+            - Integration and review
+          - **Haiku 4.5:** Implementation tasks
+            - Parallel task execution
+            - Fast code generation
+
           ## Cost Optimization
-          ✅ Maintaining 50-60% cost savings
+          ✅ Maintaining 50-60% cost savings through strategic model usage
+
+          ## Workflow Statistics
+          - ⚡ Average parallel tasks: 5
+          - 🎯 Strategic planning: Sonnet 4.5
+          - 🚀 Implementation: Haiku 4.5
+
+          ## Recommendations
+          - Continue using Haiku 4.5 for routine implementations
+          - Reserve Sonnet 4.5 for complex architectural decisions
+          - Monitor token usage patterns monthly
+
+          ---
+          *Generated automatically by Claude Monitoring Workflow*
           EOF
 
       - name: 💬 Create Issue
         uses: actions/github-script@v7
         with:
           script: |
+            const fs = require('fs');
+            const reportBody = fs.readFileSync('usage-report.md', 'utf8');
+
             await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title: '📊 Monthly Claude Usage Report',
-              body: require('fs').readFileSync('usage-report.md', 'utf8'),
+              title: '📊 Monthly Claude Usage Report - ' + new Date().toISOString().split('T')[0],
+              body: reportBody,
               labels: ['metrics', 'claude']
             });

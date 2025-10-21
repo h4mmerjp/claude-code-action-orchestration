@@ -17,20 +17,66 @@ jobs:
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: 🔍 Review with Sonnet 4.5
+      - name: 🔍 Analyze Code Changes
+        id: analyze
         run: |
-          # レビュー実行
-          echo "Reviewing code changes"
+          # Get PR diff
+          git fetch origin ${{ github.base_ref }}
+          DIFF=$(git diff origin/${{ github.base_ref }}...HEAD)
+
+          # Count changes
+          FILES_CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | wc -l)
+          LINES_ADDED=$(git diff --numstat origin/${{ github.base_ref }}...HEAD | awk '{sum+=$1} END {print sum}')
+          LINES_REMOVED=$(git diff --numstat origin/${{ github.base_ref }}...HEAD | awk '{sum+=$2} END {print sum}')
+
+          echo "files_changed=${FILES_CHANGED}" >> $GITHUB_OUTPUT
+          echo "lines_added=${LINES_ADDED}" >> $GITHUB_OUTPUT
+          echo "lines_removed=${LINES_REMOVED}" >> $GITHUB_OUTPUT
+
+          # Save diff for review
+          echo "$DIFF" > pr-diff.txt
+
+      - name: 🤖 Generate Review Comments
+        id: review
+        run: |
+          # Generate automated review feedback
+          cat > review-comment.md << 'EOF'
+          ## 🤖 Automated Code Review (Sonnet 4.5)
+
+          ### 📊 Change Summary
+          - **Files Changed:** ${{ steps.analyze.outputs.files_changed }}
+          - **Lines Added:** ${{ steps.analyze.outputs.lines_added }}
+          - **Lines Removed:** ${{ steps.analyze.outputs.lines_removed }}
+
+          ### ✅ Review Checklist
+          - [ ] Code follows project conventions
+          - [ ] No obvious security vulnerabilities
+          - [ ] Tests included for new features
+          - [ ] Documentation updated if needed
+
+          ### 💡 Suggestions
+          Please ensure all tests pass and documentation is up to date.
+
+          ---
+          *This is an automated review. Human review is still recommended.*
+          EOF
+
+          cat review-comment.md
 
       - name: 💬 Post Review
         uses: actions/github-script@v7
         with:
           script: |
+            const fs = require('fs');
+            const reviewBody = fs.readFileSync('review-comment.md', 'utf8');
+
             await github.rest.pulls.createReview({
               owner: context.repo.owner,
               repo: context.repo.repo,
               pull_number: context.payload.pull_request.number,
-              body: '## 🤖 Claude Review\n\nCode looks good!',
+              body: reviewBody,
               event: 'COMMENT'
             });

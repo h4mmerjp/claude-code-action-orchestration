@@ -137,5 +137,38 @@ jobs:
           
           🆘 Troubleshooting
           ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-          
-          Probl
+
+          Problem: "Authentication failed"
+          → Solution: Re-copy session token from browser
+          → Make sure to copy the full value (starts with sk-ant-)
+
+          Problem: "Token expired"
+          → Solution: Generate new session token
+          → Session tokens expire every ~30 days
+
+          Problem: "Rate limited"
+          → Solution: Wait 5-10 minutes before retrying
+          → Check Claude Pro subscription is active
+
+          Problem: "Workflow not triggering"
+          → Solution: Verify issue has correct label
+          → Labels: "claude-dev" or "fullstack"
+
+          Problem: "Permission denied on push"
+          → Solution: Check repository permissions
+          → Workflows need write access to contents
+
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+          📚 Additional Resources
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+          - Claude Documentation: https://docs.anthropic.com/
+          - GitHub Actions Docs: https://docs.github.com/actions
+          - Repository Settings: Settings → Secrets and variables
+
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+          ✨ You're all set! Happy coding with Claude! ✨
+
+          EOF
